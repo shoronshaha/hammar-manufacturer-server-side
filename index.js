@@ -20,16 +20,11 @@ async function run() {
         await client.connect();
         const toolCollection = client.db('manufacturer').collection('tools');
         const testimonialCollection = client.db('manufacturer').collection('testimonial');
-
-
-
-
-
-
+        const userCollection = client.db('manufacturer').collection('users')
 
         app.get('/tool', async (req, res) => {
             const query = {};
-            const cursor = toolCollection.find(query);
+            const cursor = toolCollection.find(query).sort({ _id: -1 }).limit(6);
             const tools = await cursor.toArray();
             res.send(tools);
         });
@@ -46,7 +41,31 @@ async function run() {
             const query = { _id: ObjectId(id) };
             const tool = await toolCollection.findOne(query);
             res.send(tool);
+        });
+
+        // store user information update and insert in mongodb
+        app.put('/user/:email', async (req, res) => {
+            const email = req.params.email;
+            const user = req.body;
+            const filter = { email: email };
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: user,
+            };
+            const result = await userCollection.updateOne(filter, updateDoc, options);
+            res.send(result);
         })
+
+        app.delete('/tool/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await toolCollection.deleteOne(query);
+            res.send(result);
+        });
+
+
+
+
 
     }
     finally {
