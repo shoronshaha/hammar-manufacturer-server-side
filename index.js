@@ -43,6 +43,15 @@ async function run() {
             res.send(tool);
         });
 
+        app.post('/addProduct', async (req, res) => {
+            const addProduct = req.body;
+            const result = await toolCollection.insertOne(addProduct);
+            res.send(result);
+
+        });
+
+
+
         // store user information update and insert in mongodb
         app.put('/user/:email', async (req, res) => {
             const email = req.params.email;
