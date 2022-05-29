@@ -10,9 +10,6 @@ const port = process.env.PORT || 5000
 app.use(cors());
 app.use(express.json());
 
-
-
-
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.eldb7.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 async function run() {
@@ -36,6 +33,11 @@ async function run() {
             res.send(testimonial);
         });
 
+        app.get('/user', async (req, res) => {
+            const users = await userCollection.find().toArray();
+            res.send(users);
+        });
+
         app.get('/tool/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
@@ -43,6 +45,12 @@ async function run() {
             res.send(tool);
         });
 
+        app.get('/allTool', async (req, res) => {
+            const query = {};
+            const cursor = toolCollection.find(query);
+            const allTool = await cursor.toArray();
+            res.send(allTool);
+        });
         app.post('/addProduct', async (req, res) => {
             const addProduct = req.body;
             const result = await toolCollection.insertOne(addProduct);
@@ -52,20 +60,7 @@ async function run() {
 
 
 
-        // store user information update and insert in mongodb
-        app.put('/user/:email', async (req, res) => {
-            const email = req.params.email;
-            const user = req.body;
-            const filter = { email: email };
-            const options = { upsert: true };
-            const updateDoc = {
-                $set: user,
-            };
-            const result = await userCollection.updateOne(filter, updateDoc, options);
-            res.send(result);
-        })
-
-        app.delete('/tool/:id', async (req, res) => {
+        app.delete('/allTool/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
             const result = await toolCollection.deleteOne(query);
