@@ -18,6 +18,7 @@ async function run() {
         const toolCollection = client.db('manufacturer').collection('tools');
         const testimonialCollection = client.db('manufacturer').collection('testimonial');
         const userCollection = client.db('manufacturer').collection('users')
+        const orderCollection = client.db('manufacturer').collection('orders')
 
         app.get('/tool', async (req, res) => {
             const query = {};
@@ -57,6 +58,17 @@ async function run() {
             res.send(result);
 
         });
+        app.post('/orders', async (req, res) => {
+            const data = req.body;
+            const query = {
+                productId: data._id,
+                productName: data.name,
+                productImage: data.image,
+            };
+            const result = await orderCollection.insertOne(data);
+            res.send(result);
+
+        })
 
 
 
