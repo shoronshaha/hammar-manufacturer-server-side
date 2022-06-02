@@ -54,18 +54,6 @@ async function run() {
             res.send(tools);
         });
 
-        app.get('/testimonial', async (req, res) => {
-            const query = {};
-            const cursor = testimonialCollection.find(query);
-            const testimonial = await cursor.toArray();
-            res.send(testimonial);
-        });
-
-        app.get('/user', async (req, res) => {
-            const users = await userCollection.find().toArray();
-            res.send(users);
-        });
-
         app.get('/tool/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
@@ -80,12 +68,118 @@ async function run() {
             res.send(allTool);
         });
 
-        app.get('/orders', async (req, res) => {
+
+        app.get('/testimonial', async (req, res) => {
             const query = {};
-            const cursor = orderCollection.find(query);
-            const allOrder = await cursor.toArray();
-            res.send(allOrder);
+            const cursor = testimonialCollection.find(query);
+            const testimonial = await cursor.toArray();
+            res.send(testimonial);
+        });
+
+        app.get('/user', async (req, res) => {
+            const users = await userCollection.find().toArray();
+            res.send(users);
+        });
+
+
+        app.delete('/allTool/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await toolCollection.deleteOne(query);
+            res.send(result);
+        });
+
+        // user
+        app.get("/users", verifyJWT, verifyAdmin, async (req, res) => {
+            const decodedEmail = req.decoded.email;
+            const email = req.headers.email;
+            if (email === decodedEmail) {
+                const users = await userCollection.find({}).toArray();
+                res.send(users);
+            } else {
+                res.send("Unauthorized access");
+            }
+        });
+
+        app.get("/user/:email", async (req, res) => {
+            const email = req.params.email;
+            console.log(email);
+            const user = await userCollection.findOne({ email: email });
+            res.send(user);
+
+        });
+
+
+        app.put("/user/:email", async (req, res) => {
+
+            const email = req.params.email;
+            console.log("put", email);
+            const user = req.body;
+            console.log("user", user);
+            const query = {
+                email: email,
+            };
+            const options = {
+                upsert: true,
+            };
+            const updatedDoc = {
+                $set: {
+                    email: user?.email,
+                    role: user?.role,
+                },
+            };
+            const result = await userCollection.updateOne(
+                query,
+                updatedDoc,
+                options
+            );
+            res.send(result);
+
+        });
+
+        app.put("/update/user/:email", verifyJWT, async (req, res) => {
+            const decodedEmail = req.decoded.email;
+            const email = req.headers.email;
+            if (email === decodedEmail) {
+                const email = req.params.email;
+                const user = req.body;
+                console.log("user", user);
+                const query = {
+                    email: email,
+                };
+                const options = {
+                    upsert: true,
+                };
+                const updatedDoc = {
+                    $set: {
+                        displayName: user?.displayName,
+                        institution: user?.institution,
+                        phoneNumber: user?.phoneNumber,
+                        address: user?.address,
+                        dateOfBirth: user?.dateOfBirth,
+                    },
+                };
+                const result = await userCollection.updateOne(
+                    query,
+                    updatedDoc,
+                    options
+                );
+                res.send(result);
+            } else {
+                res.send("Unauthorized access");
+            }
+        });
+
+        app.put('/user/admin/:email', verifyJWT, verifyAdmin, async (req, res) => {
+            const email = req.params.email;
+            const filter = { email: email };
+            const updateDoc = {
+                $set: { role: 'admin' },
+            };
+            const result = await userCollection.updateOne(filter, updateDoc);
+            res.send(result);
         })
+
 
         app.post('/addProduct', async (req, res) => {
             const addProduct = req.body;
@@ -93,6 +187,16 @@ async function run() {
             res.send(result);
 
         });
+
+
+        app.get('/orders', async (req, res) => {
+            const query = {};
+            const cursor = orderCollection.find(query);
+            const allOrder = await cursor.toArray();
+            res.send(allOrder);
+        })
+
+
 
         app.post('/orders', async (req, res) => {
             const data = req.body;
@@ -105,23 +209,10 @@ async function run() {
             res.send(result);
 
         })
-        app.put('/user/admin/:email', verifyJWT, verifyAdmin, async (req, res) => {
-            const email = req.params.email;
-            const filter = { email: email };
-            const updateDoc = {
-                $set: { role: 'admin' },
-            };
-            const result = await userCollection.updateOne(filter, updateDoc);
-            res.send(result);
-        })
 
 
-        app.delete('/allTool/:id', async (req, res) => {
-            const id = req.params.id;
-            const query = { _id: ObjectId(id) };
-            const result = await toolCollection.deleteOne(query);
-            res.send(result);
-        });
+
+
 
         app.delete('/allOrder/:id', async (req, res) => {
             const id = req.params.id;
