@@ -204,18 +204,18 @@ async function run() {
             res.send(allOrder);
         });
 
-        app.get('/userOrder', verifyJWT, async (req, res) => {
-            const user = req.query.user;
-            const decodedEmail = req.decoded.email;
-            if (patient === decodedEmail) {
-                const query = { user: user };
-                const orders = await userOrderCollection.find(query).toArray();
-                return res.send(orders);
-            }
-            else {
-                return res.status(403).send({ message: 'forbidden access' });
-            }
-        });
+        // app.get('/userOrder', verifyJWT, async (req, res) => {
+        //     const user = req.query.user;
+        //     const decodedEmail = req.decoded.email;
+        //     if (patient === decodedEmail) {
+        //         const query = { user: user };
+        //         const orders = await userOrderCollection.find(query).toArray();
+        //         return res.send(orders);
+        //     }
+        //     else {
+        //         return res.status(403).send({ message: 'forbidden access' });
+        //     }
+        // });
 
 
 
@@ -225,6 +225,7 @@ async function run() {
                 productId: data._id,
                 productName: data.name,
                 productImage: data.image,
+                price: data.price,
             };
             const result = await orderCollection.insertOne(data);
             const result1 = await userOrderCollection.insertOne(data);
