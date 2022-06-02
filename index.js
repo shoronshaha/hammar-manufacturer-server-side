@@ -34,6 +34,8 @@ async function run() {
         const testimonialCollection = client.db('manufacturer').collection('testimonial');
         const userCollection = client.db('manufacturer').collection('users')
         const orderCollection = client.db('manufacturer').collection('orders')
+        const userOrderCollection = client.db('manufacturer').collection('userOrders')
+
 
 
         const verifyAdmin = async (req, res, next) => {
@@ -90,7 +92,7 @@ async function run() {
         });
 
         // user
-        app.get("/users", verifyJWT, verifyAdmin, async (req, res) => {
+        app.get("/user", verifyJWT, verifyAdmin, async (req, res) => {
             const decodedEmail = req.decoded.email;
             const email = req.headers.email;
             if (email === decodedEmail) {
@@ -153,10 +155,8 @@ async function run() {
                 const updatedDoc = {
                     $set: {
                         displayName: user?.displayName,
-                        institution: user?.institution,
                         phoneNumber: user?.phoneNumber,
                         address: user?.address,
-                        dateOfBirth: user?.dateOfBirth,
                     },
                 };
                 const result = await userCollection.updateOne(
@@ -169,6 +169,14 @@ async function run() {
                 res.send("Unauthorized access");
             }
         });
+
+        app.get('/admin/:email', async (req, res) => {
+            const email = req.params.email;
+            const user = await userCollection.findOne({ email: email });
+            const isAdmin = user.role === 'admin';
+            res.send({ admin: isAdmin })
+        })
+
 
         app.put('/user/admin/:email', verifyJWT, verifyAdmin, async (req, res) => {
             const email = req.params.email;
@@ -194,7 +202,20 @@ async function run() {
             const cursor = orderCollection.find(query);
             const allOrder = await cursor.toArray();
             res.send(allOrder);
-        })
+        });
+
+        app.get('/userOrder', verifyJWT, async (req, res) => {
+            const user = req.query.user;
+            const decodedEmail = req.decoded.email;
+            if (patient === decodedEmail) {
+                const query = { user: user };
+                const orders = await userOrderCollection.find(query).toArray();
+                return res.send(orders);
+            }
+            else {
+                return res.status(403).send({ message: 'forbidden access' });
+            }
+        });
 
 
 
@@ -206,6 +227,7 @@ async function run() {
                 productImage: data.image,
             };
             const result = await orderCollection.insertOne(data);
+            const result1 = await userOrderCollection.insertOne(data);
             res.send(result);
 
         })
