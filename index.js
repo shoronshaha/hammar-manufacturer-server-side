@@ -94,6 +94,18 @@ async function run() {
             const testimonial = await cursor.toArray();
             res.send(testimonial);
         });
+        //Reviews PUT API
+        app.put('/testimonial/:email', async (req, res) => {
+            const email = req.params.email;
+            const newReview = req.body;
+            const filter = { email: email };
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: newReview,
+            };
+            const result = await testimonialCollection.updateOne(filter, updateDoc, options);
+            res.send({ result });
+        });
 
         app.get('/user', async (req, res) => {
             const users = await userCollection.find().toArray();
