@@ -112,31 +112,17 @@ async function run() {
         });
 
 
-        app.put("/user/:email", async (req, res) => {
-
+        app.put('/user/:email', async (req, res) => {
             const email = req.params.email;
-            console.log("put", email);
             const user = req.body;
-            console.log("user", user);
-            const query = {
-                email: email,
+            const filter = { email: email };
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: user,
             };
-            const options = {
-                upsert: true,
-            };
-            const updatedDoc = {
-                $set: {
-                    email: user?.email,
-                    role: user?.role,
-                },
-            };
-            const result = await userCollection.updateOne(
-                query,
-                updatedDoc,
-                options
-            );
-            res.send(result);
-
+            const result = await userCollection.updateOne(filter, updateDoc, options);
+            const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1d' })
+            res.send({ result, token });
         });
 
         app.put("/update/user/:email", verifyJWT, async (req, res) => {
@@ -204,18 +190,18 @@ async function run() {
             res.send(allOrder);
         });
 
-        // app.get('/userOrder', verifyJWT, async (req, res) => {
-        //     const user = req.query.user;
-        //     const decodedEmail = req.decoded.email;
-        //     if (patient === decodedEmail) {
-        //         const query = { user: user };
-        //         const orders = await userOrderCollection.find(query).toArray();
-        //         return res.send(orders);
-        //     }
-        //     else {
-        //         return res.status(403).send({ message: 'forbidden access' });
-        //     }
-        // });
+        app.get('/userOrder', verifyJWT, async (req, res) => {
+            const email = req.query.email;
+            const decodedEmail = req.decoded.email;
+            if (email === decodedEmail) {
+                const query = { email: email };
+                const orders = await userOrderCollection.find(query).toArray();
+                return res.send(orders);
+            }
+            else {
+                return res.status(403).send({ message: 'forbidden access' });
+            }
+        });
 
 
 
